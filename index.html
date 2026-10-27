@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Festival Booth Quest!</title>
+    <!-- Google Fonts for Gaming / Modern Vibe -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-pink: #ec4899;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+            --accent-yellow: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --correct: #10b981;
+            --wrong: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Jua', 'Nunito', sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(236, 72, 153, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 650px;
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(12px);
+            border: 3px solid #334155;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 20px rgba(139, 92, 246, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 640px;
+            position: relative;
+        }
+
+        /* Top Status Bar */
+        .top-bar {
+            background: #0f172a;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #334155;
+        }
+
+        .quest-badge {
+            background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 10px rgba(236, 72, 153, 0.3);
+        }
+
+        .hp-bar-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .progress-track {
+            width: 120px;
+            height: 12px;
+            background: #334155;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 25%;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--correct));
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Screen Contents */
+        .content-body {
+            padding: 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Story Box (Mission Center) */
+        .story-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px dashed var(--accent-cyan);
+            border-radius: 16px;
+            padding: 20px;
+            line-height: 1.8;
+            font-size: 1.1rem;
+            position: relative;
+        }
+
+        .story-card .avatar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            color: var(--accent-yellow);
+            font-size: 1.2rem;
+        }
+
+        .target-word {
+            color: var(--accent-yellow);
+            background: rgba(245, 158, 11, 0.15);
+            padding: 2px 8px;
+            border-radius: 6px;
+            border-bottom: 2px solid var(--accent-yellow);
+            font-weight: bold;
+        }
+
+        /* Target List Cards */
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 12px;
+        }
+
+        .vocab-item {
+            background: #334155;
+            border: 2px solid #475569;
+            border-radius: 14px;
+            padding: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .vocab-item:hover {
+            border-color: var(--accent-cyan);
+            transform: scale(1.02);
+        }
+
+        .vocab-item .en {
+            color: var(--accent-cyan);
+            font-size: 1.1rem;
+        }
+
+        .vocab-item .kr {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Matching Interactive Grid */
+        .matching-board {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .interactive-btn {
+            background: #334155;
+            border: 2px solid #475569;
+            color: var(--text-main);
+            padding: 14px;
+            border-radius: 14px;
+            font-size: 1.05rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            box-shadow: 0 4px 0 #1e293b;
+        }
+
+        .interactive-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #1e293b;
+        }
+
+        .interactive-btn.selected {
+            border-color: var(--accent-pink);
+            background: rgba(236, 72, 153, 0.2);
+            color: #ff75c3;
+        }
+
+        .interactive-btn.correct {
+            border-color: var(--correct);
+            background: rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+            pointer-events: none;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+
+        .interactive-btn.wrong {
+            animation: shake 0.3s ease;
+            border-color: var(--wrong);
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
+        /* Sentence Quiz Box */
+        .question-box {
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            font-size: 1.25rem;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .blank {
+            display: inline-block;
+            min-width: 130px;
+            border-bottom: 3px dashed var(--accent-pink);
+            color: var(--accent-pink);
+            padding: 0 8px;
+        }
+
+        /* Action Buttons */
+        .primary-btn {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 16px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+            align-self: center;
+            margin-top: 10px;
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(236, 72, 153, 0.5);
+        }
+
+        .primary-btn:disabled {
+            background: #475569;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Results Display */
+        .result-card {
+            text-align: center;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 20px;
+            padding: 30px;
+            border: 2px solid var(--accent-purple);
+        }
+
+        .score-val {
+            font-size: 4rem;
+            color: var(--accent-yellow);
+            text-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+            margin: 10px 0;
+        }
+
+        .feedback-msg {
+            font-size: 1.1rem;
+            color: var(--accent-cyan);
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <!-- Header -->
+    <div class="top-bar">
+        <span class="quest-badge">STAGE <span id="stage-num">1</span>/4</span>
+        <div class="hp-bar-container">
+            <span style="font-size: 0.85rem; color: var(--text-muted);">PROGRESS</span>
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-body">
+
+        <!-- STAGE 1: STORY INTRO -->
+        <div class="screen active" id="stage-intro">
+            <h2 style="color: var(--accent-cyan); text-align: center; font-size: 1.6rem;">🎪 Save Mina's Festival Booth!</h2>
+            
+            <div class="story-card">
+                <div class="avatar">
+                    <span>👩‍🎓 Read Mina's Story:</span>
+                </div>
+                <p style="font-size: 1.05rem; color: #cbd5e1;">
+                    Our class is preparing for the school festival. Mina is <span class="target-word">in charge of</span> the English booth. 
+                    She asked everyone to <span class="target-word">take part in</span> a short quiz game. 
+                    At first, the team could not <span class="target-word">figure out</span> how to make the activity interesting. 
+                    They decided to <span class="target-word">work on</span> a mystery theme. 
+                    After testing the game, they decided to <span class="target-word">cut down on</span> long instructions. 
+                    They hope these changes will <span class="target-word">make a difference</span> for the students who visit the booth.
+                </p>
+            </div>
+
+            <button class="primary-btn" onclick="goToStage('stage-vocab')">Check 6 Target Phrases 👉</button>
+        </div>
+
+        <!-- STAGE 2: VOCABULARY CARD -->
+        <div class="screen" id="stage-vocab">
+            <h2 style="color: var(--accent-yellow); text-align: center; font-size: 1.5rem;">⚡ Power-Up Vocabulary!</h2>
+            <p style="text-align: center; color: var(--text-muted);">Review these 6 key expressions before the challenge!</p>
+
+            <div class="grid-cards">
+                <div class="vocab-item"><span class="en">1. in charge of</span> <span class="kr">~을 맡은</span></div>
+                <div class="vocab-item"><span class="en">2. take part in</span> <span class="kr">~에 참여하다</span></div>
+                <div class="vocab-item"><span class="en">3. figure out</span> <span class="kr">알아내다/해결하다</span></div>
+                <div class="vocab-item"><span class="en">4. work on</span> <span class="kr">~에 공을 들이다</span></div>
+                <div class="vocab-item"><span class="en">5. cut down on</span> <span class="kr">~을 줄이다</span></div>
+                <div class="vocab-item"><span class="en">6. make a difference</span> <span class="kr">변화를 가져오다</span></div>
+            </div>
+
+            <button class="primary-btn" onclick="startMatchGame()">Start Matching Game! 🎮</button>
+        </div>
+
+        <!-- STAGE 3: MATCHING GAME -->
+        <div class="screen" id="stage-match">
+            <h2 style="color: var(--accent-pink); text-align: center; font-size: 1.5rem;">🧩 CHALLENGE 1: Match the Meanings</h2>
+            <p style="text-align: center; color: var(--text-muted); font-size: 0.95rem;">Match each English phrase with its correct Korean meaning!</p>
+
+            <div class="matching-board">
+                <div style="display: flex; flex-direction: column; gap: 10px;" id="col-eng"></div>
+                <div style="display: flex; flex-direction: column; gap: 10px;" id="col-kr"></div>
+            </div>
+
+            <button class="primary-btn" id="btn-next-to-quiz" style="display: none;" onclick="startQuizGame()">Next Quest: Fill in the Blanks 👉</button>
+        </div>
+
+        <!-- STAGE 4: QUIZ -->
+        <div class="screen" id="stage-quiz">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="color: var(--accent-cyan); font-size: 1.4rem;">🎯 CHALLENGE 2: Fill in the Blank</h2>
+                <span id="quiz-progress" style="color: var(--accent-yellow);">Q 1 / 6</span>
+            </div>
+
+            <div class="question-box" id="quiz-question">
+                <!-- Sentence rendering -->
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;" id="quiz-options">
+                <!-- Option buttons rendering -->
+            </div>
+
+            <p id="quiz-hint" style="text-align: center; height: 1.5rem; color: var(--accent-pink); font-size: 1.05rem;"></p>
+
+            <button class="primary-btn" id="btn-next-q" style="display: none;" onclick="nextQuestion()">Next Question 🚀</button>
+        </div>
+
+        <!-- STAGE 5: RESULT -->
+        <div class="screen" id="stage-result">
+            <div class="result-card">
+                <h2>🏆 QUEST COMPLETED!</h2>
+                <p style="color: var(--text-muted); margin-top: 5px;">You successfully helped Mina prepare the English booth!</p>
+                
+                <div class="score-val" id="score-text">6 / 6</div>
+                <div class="feedback-msg" id="feedback-msg">Perfect Score! You are an English Master! 😎</div>
+
+                <button class="primary-btn" onclick="restart()">Try Again 🔄</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const data = [
+        { id: 1, en: "in charge of", kr: "~을 맡은", sentence: "Mina is <span class='blank'>?</span> the English booth at the festival." },
+        { id: 2, en: "take part in", kr: "~에 참여하다", sentence: "She asked all classmates to <span class='blank'>?</span> the quiz game." },
+        { id: 3, en: "figure out", kr: "알아내다/해결하다", sentence: "At first, they couldn't <span class='blank'>?</span> how to make it fun." },
+        { id: 4, en: "work on", kr: "~에 공을 들이다", sentence: "The team decided to <span class='blank'>?</span> a mystery theme." },
+        { id: 5, en: "cut down on", kr: "~을 줄이다", sentence: "They decided to <span class='blank'>?</span> long instructions." },
+        { id: 6, en: "make a difference", kr: "변화를 가져오다", sentence: "These changes will <span class='blank'>?</span> for visitors." }
+    ];
+
+    let currentStage = 1;
+    let selectedEngBtn = null;
+    let selectedKrBtn = null;
+    let matchCount = 0;
+
+    let quizIdx = 0;
+    let score = 0;
+
+    function goToStage(stageId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(stageId).classList.add('active');
+
+        if(stageId === 'stage-intro') currentStage = 1;
+        if(stageId === 'stage-vocab') currentStage = 2;
+        if(stageId === 'stage-match') currentStage = 3;
+        if(stageId === 'stage-quiz') currentStage = 4;
+        if(stageId === 'stage-result') currentStage = 4;
+
+        document.getElementById('stage-num').textContent = currentStage;
+        document.getElementById('progress-fill').style.width = (currentStage * 25) + '%';
+    }
+
+    /* MATCHING GAME */
+    function startMatchGame() {
+        goToStage('stage-match');
+        matchCount = 0;
+        selectedEngBtn = null;
+        selectedKrBtn = null;
+        document.getElementById('btn-next-to-quiz').style.display = 'none';
+
+        const colEng = document.getElementById('col-eng');
+        const colKr = document.getElementById('col-kr');
+        colEng.innerHTML = '';
+        colKr.innerHTML = '';
+
+        const shuffledEng = [...data].sort(() => Math.random() - 0.5);
+        const shuffledKr = [...data].sort(() => Math.random() - 0.5);
+
+        shuffledEng.forEach(item => {
+            const btn = document.createElement('div');
+            btn.className = 'interactive-btn';
+            btn.textContent = item.en;
+            btn.dataset.id = item.id;
+            btn.onclick = () => selectEng(btn, item.id);
+            colEng.appendChild(btn);
+        });
+
+        shuffledKr.forEach(item => {
+            const btn = document.createElement('div');
+            btn.className = 'interactive-btn';
+            btn.textContent = item.kr;
+            btn.dataset.id = item.id;
+            btn.onclick = () => selectKr(btn, item.id);
+            colKr.appendChild(btn);
+        });
+    }
+
+    function selectEng(btn, id) {
+        if(btn.classList.contains('correct')) return;
+        document.querySelectorAll('#col-eng .interactive-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedEngBtn = { btn, id };
+        checkMatchPair();
+    }
+
+    function selectKr(btn, id) {
+        if(btn.classList.contains('correct')) return;
+        document.querySelectorAll('#col-kr .interactive-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedKrBtn = { btn, id };
+        checkMatchPair();
+    }
+
+    function checkMatchPair() {
+        if(selectedEngBtn && selectedKrBtn) {
+            if(selectedEngBtn.id === selectedKrBtn.id) {
+                selectedEngBtn.btn.className = 'interactive-btn correct';
+                selectedKrBtn.btn.className = 'interactive-btn correct';
+                matchCount++;
+
+                if(matchCount === data.length) {
+                    document.getElementById('btn-next-to-quiz').style.display = 'block';
+                }
+            } else {
+                const b1 = selectedEngBtn.btn;
+                const b2 = selectedKrBtn.btn;
+                b1.classList.add('wrong');
+                b2.classList.add('wrong');
+                setTimeout(() => {
+                    b1.classList.remove('selected', 'wrong');
+                    b2.classList.remove('selected', 'wrong');
+                }, 400);
+            }
+            selectedEngBtn = null;
+            selectedKrBtn = null;
+        }
+    }
+
+    /* QUIZ GAME */
+    function startQuizGame() {
+        goToStage('stage-quiz');
+        quizIdx = 0;
+        score = 0;
+        renderQuiz();
+    }
+
+    function renderQuiz() {
+        document.getElementById('btn-next-q').style.display = 'none';
+        document.getElementById('quiz-hint').textContent = '';
+        
+        const q = data[quizIdx];
+        document.getElementById('quiz-progress').textContent = `Q ${quizIdx + 1} / ${data.length}`;
+        document.getElementById('quiz-question').innerHTML = q.sentence;
+
+        const container = document.getElementById('quiz-options');
+        container.innerHTML = '';
+
+        let choices = [q.en];
+        let others = data.filter(d => d.id !== q.id).map(d => d.en).sort(() => Math.random() - 0.5).slice(0, 3);
+        choices = choices.concat(others).sort(() => Math.random() - 0.5);
+
+        choices.forEach(choiceText => {
+            const btn = document.createElement('div');
+            btn.className = 'interactive-btn';
+            btn.textContent = choiceText;
+            btn.onclick = () => handleAnswer(btn, choiceText, q.en);
+            container.appendChild(btn);
+        });
+    }
+
+    function handleAnswer(selectedBtn, chosen, correct) {
+        const allBtns = document.querySelectorAll('#quiz-options .interactive-btn');
+        allBtns.forEach(b => b.onclick = null);
+
+        const blankEl = document.querySelector('.question-box .blank');
+        blankEl.textContent = correct;
+
+        if(chosen === correct) {
+            selectedBtn.classList.add('correct');
+            document.getElementById('quiz-hint').style.color = 'var(--correct)';
+            document.getElementById('quiz-hint').textContent = 'Correct! Great job! 🎉';
+            score++;
+        } else {
+            selectedBtn.classList.add('wrong');
+            document.getElementById('quiz-hint').style.color = 'var(--wrong)';
+            document.getElementById('quiz-hint').textContent = `Oops! Correct answer: ${correct}`;
+            allBtns.forEach(b => {
+                if(b.textContent === correct) b.classList.add('correct');
+            });
+        }
+
+        document.getElementById('btn-next-q').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        quizIdx++;
+        if(quizIdx < data.length) {
+            renderQuiz();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        goToStage('stage-result');
+        document.getElementById('score-text').textContent = `${score} / ${data.length}`;
+        const msg = document.getElementById('feedback-msg');
+        if(score === 6) msg.textContent = "Awesome! Perfect score! 😎";
+        else if(score >= 4) msg.textContent = "Good job! Almost perfect! 👍";
+        else msg.textContent = "Keep practicing! You can do it! 🔥";
+    }
+
+    function restart() {
+        goToStage('stage-intro');
+    }
+</script>
+
+</body>
+</html>
